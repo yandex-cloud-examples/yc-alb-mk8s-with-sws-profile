@@ -6,13 +6,20 @@
 # Set the configuration of Managed Service for Kubernetes cluster
 
 locals {
+
+  # The following settings are to be specified by the user. Change them as you wish.
+
+  folder_id             = ""              # Set your cloud folder ID.
+  k8s_sa_name           = ""              # Set a Kubernetes cluster's service account name. It must be unique within the cloud.
+  alb_sa_name           = ""              # Set an ALB's service account name. It must be unique within the cloud.
+
+  # The following settings are predefined. Change them only if necessary.
+
   k8s_version           = "1.27"          # Set the Kubernetes version.
   zone_a_v4_cidr_blocks = "10.1.0.0/16"   # Set the CIDR block for subnet in the ru-central1-a availability zone.
   cluster_ipv4_cidr     = "10.112.0.0/16" # Set IP range for allocating pod addresses.
   service_ipv4_cidr     = "10.96.0.0/16"  # Set IP range for allocating service addresses.
-  folder_id             = ""              # Set your cloud folder ID.
-  k8s_sa_name           = ""              # Set a Kubernetes cluster's service account name. It must be unique in a cloud.
-  alb_sa_name           = ""              # Set an ALB's service account name. It must be unique in a cloud.
+
 }
 
 resource "yandex_vpc_network" "k8s-network" {
@@ -29,8 +36,8 @@ resource "yandex_vpc_subnet" "subnet-a" {
 }
 
 resource "yandex_vpc_security_group" "k8s-cluster-nodegroup-traffic" {
-  name        = "k8s-cluster-nodegroup-traffic"
   description = "The group rules allow service traffic for the cluster and node groups. Apply the rules to the cluster and the node groups."
+  name        = "k8s-cluster-nodegroup-traffic"
   network_id  = yandex_vpc_network.k8s-network.id
   ingress {
     description       = "The rule allows availability checks from the load balancer's range of addresses."
@@ -61,8 +68,8 @@ resource "yandex_vpc_security_group" "k8s-cluster-nodegroup-traffic" {
 }
 
 resource "yandex_vpc_security_group" "k8s-nodegroup-traffic" {
-  name        = "k8s-nodegroup-traffic"
   description = "The group rules allow service traffic for the node groups. Apply the rules to the node groups."
+  name        = "k8s-nodegroup-traffic"
   network_id  = yandex_vpc_network.k8s-network.id
   ingress {
     description    = "The rule allows incoming service traffic between Kubernetes pods and services."
@@ -94,8 +101,8 @@ resource "yandex_vpc_security_group" "k8s-services-access" {
 }
 
 resource "yandex_vpc_security_group" "k8s-ssh-access" {
-  name        = "k8s-ssh-access"
   description = "The group rules allow connections to Kubernetes nodes via SSH. Apply the rules to the node groups."
+  name        = "k8s-ssh-access"
   network_id  = yandex_vpc_network.k8s-network.id
   ingress {
     description    = "The rule allows incoming traffic in order to connect to nodes via SSH."
@@ -106,8 +113,8 @@ resource "yandex_vpc_security_group" "k8s-ssh-access" {
 }
 
 resource "yandex_vpc_security_group" "k8s-cluster-traffic" {
-  name        = "k8s-cluster-traffic"
   description = "The group rules allow traffic for the cluster. Apply the rules to the cluster."
+  name        = "k8s-cluster-traffic"
   network_id  = yandex_vpc_network.k8s-network.id
   ingress {
     description    = "The rule allows incoming traffic in order to access Kubernetes API via 443 port."
@@ -130,8 +137,8 @@ resource "yandex_vpc_security_group" "k8s-cluster-traffic" {
 }
 
 resource "yandex_vpc_security_group" "alb-k8s-nodegroup-traffic" {
-  name        = "alb-k8s-nodegroup-traffic"
   description = "The group rules allow traffic from ALB to the node groups. Apply the rules to the node groups."
+  name        = "alb-k8s-nodegroup-traffic"
   network_id  = yandex_vpc_network.k8s-network.id
   ingress {
     description    = "The rule allows incoming traffic in order to do backend health checks."
@@ -142,8 +149,8 @@ resource "yandex_vpc_security_group" "alb-k8s-nodegroup-traffic" {
 }
 
 resource "yandex_vpc_security_group" "alb-traffic" {
-  name        = "alb-traffic"
   description = "The group rules allow traffic from ALB to the node groups. Apply the rules to the ALB L7 load balancer."
+  name        = "alb-traffic"
   network_id  = yandex_vpc_network.k8s-network.id
   ingress {
     description    = "The rule allows incoming HTTP traffic."
@@ -166,6 +173,7 @@ resource "yandex_vpc_security_group" "alb-traffic" {
   }
 }
 
+# Kubernetes service account
 resource "yandex_iam_service_account" "k8s-sa" {
   name = local.k8s_sa_name
 }
@@ -188,6 +196,7 @@ resource "yandex_resourcemanager_folder_iam_binding" "k8s-vpc-publicadmin" {
   ]
 }
 
+# Application Load Balancer service account
 resource "yandex_iam_service_account" "alb-sa" {
   name = local.alb_sa_name
 }
@@ -230,8 +239,8 @@ resource "yandex_resourcemanager_folder_iam_binding" "alb-sws-editor" {
 
 # Managed Service for Kubernetes cluster
 resource "yandex_kubernetes_cluster" "k8s-cluster" {
-  name        = "k8s-cluster"
   description = "Managed Service for Kubernetes cluster"
+  name        = "k8s-cluster"
 
   service_account_id      = yandex_iam_service_account.k8s-sa.id # Cluster service account ID
   node_service_account_id = yandex_iam_service_account.k8s-sa.id # Node group service account ID
