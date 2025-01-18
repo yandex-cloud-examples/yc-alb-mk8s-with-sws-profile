@@ -9,13 +9,15 @@ locals {
 
   # The following settings are to be specified by the user. Change them as you wish.
 
-  folder_id             = ""              # Set your cloud folder ID.
-  k8s_sa_name           = ""              # Set a Kubernetes cluster's service account name. It must be unique within the cloud.
-  alb_sa_name           = ""              # Set an ALB's service account name. It must be unique within the cloud.
+  folder_id   = ""       # Set your cloud folder ID.
+  k8s_sa_name = ""       # Set a Kubernetes cluster's service account name. It must be unique within the cloud.
+  alb_sa_name = ""       # Set an ALB's service account name. It must be unique within the cloud.
+  sws_name    = ""       # Set the name of the Smart Web Security profile.
+  allowed_ips = ["", ""] # Set the list of the allowed IP addresses.
 
   # The following settings are predefined. Change them only if necessary.
 
-  k8s_version           = "1.27"          # Set the Kubernetes version.
+  k8s_version           = "1.28"          # Set the Kubernetes version.
   zone_a_v4_cidr_blocks = "10.1.0.0/16"   # Set the CIDR block for subnet in the ru-central1-a availability zone.
   cluster_ipv4_cidr     = "10.112.0.0/16" # Set IP range for allocating pod addresses.
   service_ipv4_cidr     = "10.96.0.0/16"  # Set IP range for allocating service addresses.
@@ -308,6 +310,40 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
     boot_disk {
       type = "network-hdd"
       size = 64 # Disk size in GB
+    }
+  }
+}
+
+# Smart Web Security profile
+resource "yandex_sws_security_profile" "sws-profile" {
+  description    = "Security profile for the Application Load Balancer"
+  name           = local.sws_name
+  default_action = "DENY"
+
+  security_rule {
+    description = "Smart protection is enabled in full mode"
+    name        = "default-sp-rule"
+    priority    = 999900
+    smart_protection {
+      mode = "FULL"
+    }
+  }
+
+  security_rule {
+    description = "Traffic is allowed only from the specified IP address"
+    name        = "test-rule1"
+    priority    = 999800
+
+    rule_condition {
+      action = "ALLOW"
+
+      condition {
+        source_ip {
+          ip_ranges_match {
+            ip_ranges = local.allowed_ips
+          }
+        }
+      }
     }
   }
 }
