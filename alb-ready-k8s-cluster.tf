@@ -14,10 +14,10 @@ locals {
   alb_sa_name = ""       # Set an ALB's service account name. It must be unique within the cloud.
   sws_name    = ""       # Set the name of the Smart Web Security profile.
   allowed_ips = ["", ""] # Set the list of the allowed IP addresses.
+  k8s_version = ""       # Set the Kubernetes version from https://yandex.cloud/ru/docs/managed-kubernetes/concepts/release-channels-and-updates
 
   # The following settings are predefined. Change them only if necessary.
 
-  k8s_version           = "1.28"          # Set the Kubernetes version.
   zone_a_v4_cidr_blocks = "10.1.0.0/16"   # Set the CIDR block for subnet in the ru-central1-a availability zone.
   cluster_ipv4_cidr     = "10.112.0.0/16" # Set IP range for allocating pod addresses.
   service_ipv4_cidr     = "10.96.0.0/16"  # Set IP range for allocating service addresses.
