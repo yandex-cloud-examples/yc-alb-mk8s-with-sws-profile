@@ -239,6 +239,24 @@ resource "yandex_resourcemanager_folder_iam_binding" "alb-sws-editor" {
   ]
 }
 
+# Assign "k8s.viewer" role to ALB service account
+resource "yandex_resourcemanager_folder_iam_binding" "alb-k8s-viewer" {
+  folder_id = local.folder_id
+  role      = "k8s.viewer"
+  members = [
+    "serviceAccount:${yandex_iam_service_account.alb-sa.id}"
+  ]
+}
+
+# Assign "certificate-manager.editor" role to ALB service account
+resource "yandex_resourcemanager_folder_iam_binding" "alb-certificate-manager-editor" {
+  folder_id = local.folder_id
+  role      = "certificate-manager.editor"
+  members = [
+    "serviceAccount:${yandex_iam_service_account.alb-sa.id}"
+  ]
+}
+
 # Managed Service for Kubernetes cluster
 resource "yandex_kubernetes_cluster" "k8s-cluster" {
   description = "Managed Service for Kubernetes cluster"
