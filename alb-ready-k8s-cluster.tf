@@ -9,7 +9,6 @@ locals {
 
   # The following settings are to be specified by the user. Change them as you wish.
 
-  cloud_id    = ""       # Set your cloud ID.
   folder_id   = ""       # Set your cloud folder ID.
   zone        = "" # Set the availability zone for the cluster.
   k8s_sa_name = ""       # Set a Kubernetes cluster's service account name. It must be unique within the cloud.
@@ -267,9 +266,9 @@ resource "yandex_kubernetes_cluster" "k8s-cluster" {
   service_account_id      = yandex_iam_service_account.k8s-sa.id # Cluster service account ID
   node_service_account_id = yandex_iam_service_account.k8s-sa.id # Node group service account ID
 
-  network_id            = yandex_vpc_network.k8s-network.id
-  cluster_ipv4_ranges   = [local.cluster_ipv4_cidr]
-  service_ipv4_range    = local.service_ipv4_cidr
+  network_id          = yandex_vpc_network.k8s-network.id
+  cluster_ipv4_ranges = [local.cluster_ipv4_cidr]
+  service_ipv4_range  = local.service_ipv4_cidr
 
   master {
     master_location {
