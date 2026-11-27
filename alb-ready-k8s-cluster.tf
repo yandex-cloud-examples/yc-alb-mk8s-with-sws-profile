@@ -30,9 +30,9 @@ resource "yandex_vpc_network" "k8s-network" {
   name        = "k8s-network"
 }
 
-resource "yandex_vpc_subnet" "subnet-a" {
+resource "yandex_vpc_subnet" "k8s-subnet" {
   description    = "Subnet in the ${local.zone} availability zone"
-  name           = "subnet-a"
+  name           = "k8s-subnet"
   zone           = local.zone
   network_id     = yandex_vpc_network.k8s-network.id
   v4_cidr_blocks = [local.zone_a_v4_cidr_blocks]
@@ -272,8 +272,8 @@ resource "yandex_kubernetes_cluster" "k8s-cluster" {
 
   master {
     master_location {
-      zone      = yandex_vpc_subnet.subnet-a.zone
-      subnet_id = yandex_vpc_subnet.subnet-a.id
+      zone      = yandex_vpc_subnet.k8s-subnet.zone
+      subnet_id = yandex_vpc_subnet.k8s-subnet.id
     }
     security_group_ids = [
       yandex_vpc_security_group.k8s-cluster-nodegroup-traffic.id,
@@ -302,7 +302,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
   allocation_policy {
     location {
-      zone = yandex_vpc_subnet.subnet-a.zone
+      zone = yandex_vpc_subnet.k8s-subnet.zone
     }
   }
 
@@ -311,7 +311,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
     network_interface {
       nat        = true
-      subnet_ids = [yandex_vpc_subnet.subnet-a.id]
+      subnet_ids = [yandex_vpc_subnet.k8s-subnet.id]
       security_group_ids = [
         yandex_vpc_security_group.k8s-cluster-nodegroup-traffic.id,
         yandex_vpc_security_group.k8s-nodegroup-traffic.id,
