@@ -11,7 +11,7 @@ locals {
 
   cloud_id    = ""       # Set your cloud ID.
   folder_id   = ""       # Set your cloud folder ID.
-  zone        = "ru-central1-a" # Set the availability zone for the cluster.
+  zone        = "" # Set the availability zone for the cluster.
   k8s_sa_name = ""       # Set a Kubernetes cluster's service account name. It must be unique within the cloud.
   alb_sa_name = ""       # Set an ALB's service account name. It must be unique within the cloud.
   sws_name    = ""       # Set the name of the Smart Web Security profile.
@@ -21,8 +21,8 @@ locals {
   # The following settings are predefined. Change them only if necessary.
 
   zone_a_v4_cidr_blocks = "10.1.0.0/16"   # Set the CIDR block for the subnet in the availability zone.
-  cluster_ipv4_cidr    = "10.112.0.0/16" # Set IP range for allocating pod addresses.
-  service_ipv4_cidr    = "10.96.0.0/16"  # Set IP range for allocating service addresses.
+  cluster_ipv4_cidr     = "10.112.0.0/16" # Set IP range for allocating pod addresses.
+  service_ipv4_cidr     = "10.96.0.0/16"  # Set IP range for allocating service addresses.
 
 }
 
