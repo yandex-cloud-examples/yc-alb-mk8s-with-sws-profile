@@ -10,6 +10,7 @@ locals {
   # The following settings are to be specified by the user. Change them as you wish.
 
   folder_id   = ""       # Set your cloud folder ID.
+  zone        = "" # Set the availability zone for the cluster.
   k8s_sa_name = ""       # Set a Kubernetes cluster's service account name. It must be unique within the cloud.
   alb_sa_name = ""       # Set an ALB's service account name. It must be unique within the cloud.
   sws_name    = ""       # Set the name of the Smart Web Security profile.
@@ -18,7 +19,7 @@ locals {
 
   # The following settings are predefined. Change them only if necessary.
 
-  zone_a_v4_cidr_blocks = "10.1.0.0/16"   # Set the CIDR block for subnet in the ru-central1-a availability zone.
+  zone_a_v4_cidr_blocks = "10.1.0.0/16"   # Set the CIDR block for the subnet in the availability zone.
   cluster_ipv4_cidr     = "10.112.0.0/16" # Set IP range for allocating pod addresses.
   service_ipv4_cidr     = "10.96.0.0/16"  # Set IP range for allocating service addresses.
 
@@ -29,10 +30,10 @@ resource "yandex_vpc_network" "k8s-network" {
   name        = "k8s-network"
 }
 
-resource "yandex_vpc_subnet" "subnet-a" {
-  description    = "Subnet in ru-central1-a availability zone"
-  name           = "subnet-a"
-  zone           = "ru-central1-a"
+resource "yandex_vpc_subnet" "k8s-subnet" {
+  description    = "Subnet in the ${local.zone} availability zone"
+  name           = "k8s-subnet"
+  zone           = local.zone
   network_id     = yandex_vpc_network.k8s-network.id
   v4_cidr_blocks = [local.zone_a_v4_cidr_blocks]
 }
@@ -265,14 +266,14 @@ resource "yandex_kubernetes_cluster" "k8s-cluster" {
   service_account_id      = yandex_iam_service_account.k8s-sa.id # Cluster service account ID
   node_service_account_id = yandex_iam_service_account.k8s-sa.id # Node group service account ID
 
-  network_id         = yandex_vpc_network.k8s-network.id
-  cluster_ipv4_range = local.cluster_ipv4_cidr
-  service_ipv4_range = local.service_ipv4_cidr
+  network_id          = yandex_vpc_network.k8s-network.id
+  cluster_ipv4_ranges = [local.cluster_ipv4_cidr]
+  service_ipv4_range  = local.service_ipv4_cidr
 
   master {
     master_location {
-      zone      = yandex_vpc_subnet.subnet-a.zone
-      subnet_id = yandex_vpc_subnet.subnet-a.id
+      zone      = yandex_vpc_subnet.k8s-subnet.zone
+      subnet_id = yandex_vpc_subnet.k8s-subnet.id
     }
     security_group_ids = [
       yandex_vpc_security_group.k8s-cluster-nodegroup-traffic.id,
@@ -301,7 +302,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
   allocation_policy {
     location {
-      zone = yandex_vpc_subnet.subnet-a.zone
+      zone = yandex_vpc_subnet.k8s-subnet.zone
     }
   }
 
@@ -310,7 +311,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
     network_interface {
       nat        = true
-      subnet_ids = [yandex_vpc_subnet.subnet-a.id]
+      subnet_ids = [yandex_vpc_subnet.k8s-subnet.id]
       security_group_ids = [
         yandex_vpc_security_group.k8s-cluster-nodegroup-traffic.id,
         yandex_vpc_security_group.k8s-nodegroup-traffic.id,
@@ -334,9 +335,10 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
 # Smart Web Security profile
 resource "yandex_sws_security_profile" "sws-profile" {
-  description    = "Security profile for the Application Load Balancer"
-  name           = local.sws_name
-  default_action = "DENY"
+  description             = "Security profile for the Application Load Balancer"
+  name                    = local.sws_name
+  default_action          = "DENY"
+  disallow_data_processing = false
 
   security_rule {
     description = "Smart protection is enabled in full mode"
