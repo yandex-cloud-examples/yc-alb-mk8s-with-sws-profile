@@ -367,24 +367,3 @@ resource "yandex_sws_security_profile" "sws-profile" {
     }
   }
 }
-
-# Outputs: resource IDs required for the Ingress resource
-output "subnet_id" {
-  description = "ID of the subnet for the ALB load balancer"
-  value       = yandex_vpc_subnet.subnet-a.id
-}
-
-output "alb_security_group_id" {
-  description = "ID of the security group for the ALB load balancer"
-  value       = yandex_vpc_security_group.alb-traffic.id
-}
-
-output "sws_security_profile_id" {
-  description = "ID of the Smart Web Security profile"
-  value       = yandex_sws_security_profile.sws-profile.id
-}
-
-output "k8s_cluster_id" {
-  description = "ID of the Managed Service for Kubernetes cluster"
-  value       = yandex_kubernetes_cluster.k8s-cluster.id
-}
